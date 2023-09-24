@@ -1,0 +1,106 @@
+
+
+# https://mieruca-ai.com/ai/morphological_analysis_mecab/
+# https://www.wakuwakubank.com/posts/272-python-mecab/
+# https://zenn.dev/suyaa/articles/cb8a7e0c2767b3
+# https://blog.apar.jp/linux/2796/#toc5
+# https://qiita.com/hiro0217/items/cfcf801023c0b5e8b1c6
+
+
+WS=/workspace
+
+cd $WS
+wget "https://drive.google.com/uc?export=download&id=0B4y35FiV1wh7cENtOXlicTFaRUE" -O "./mecab-0.996.tar.gz"
+tar -zxvf mecab-0.996.tar.gz
+cd mecab-0.996
+
+./configure --prefix=/home/asitaba/bin/mecab --with-charset=utf-8 LDFLAGS=-L/home/asitaba/bin/mecab/lib
+make
+make install
+
+cd $WS
+wget -O mecab-ipadic-2.7.0-20070801.tar.gz 'https://drive.google.com/uc?export=download&id=0B4y35FiV1wh7MWVlSDBCSXZMTXM'
+tar -zxvf mecab-ipadic-2.7.0-20070801.tar.gz
+cd mecab-ipadic-2.7.0-20070801
+./configure --prefix=/home/asitaba/bin/mecab --with-charset=utf-8 LDFLAGS=-L/home/asitaba/bin/mecab/lib
+make
+make install
+
+mecab
+
+
+cd $WS
+git clone --depth 1 https://github.com/neologd/mecab-ipadic-neologd.git
+cd mecab-ipadic-neologd
+./bin/install-mecab-ipadic-neologd -n --prefix /home/asitaba/bin/mecab/lib/mecab/dic/ipadic-neorogd
+
+mecab -d /home/asitaba/bin/mecab/lib/mecab/dic/ipadic-neorogd <<EOF
+君の名は。
+EOF
+
+
+cd /home/asitaba/bin/mecab/lib/mecab/dic
+mkdir mydic
+cd mydic
+#cat <<EOF> test.csv
+#表層形,,,,品詞,品詞細分類1,品詞細分類2,品詞細分類3,活用型,活用形,原形,読み,発音,追加エントリ
+#ユーザ設定,,,,名詞,一般,*,*,*,*,ユーザ設定,ユーザセッテイ,ユーザセッテイ,追加エントリ
+#EOF
+cat <<EOF> cost.csv
+表層形,0,0,0,品詞,品詞細分類1,品詞細分類2,品詞細分類3,活用型,活用形,原形,読み,発音,追加エントリ
+ユーザ設定,0,0,0,名詞,一般,*,*,*,*,ユーザ設定,ユーザセッテイ,ユーザセッテイ,追加エントリ
+EOF
+
+#wget -O mecab-ipadic-2.7.0-20070801.model.bz2 "https://drive.google.com/uc?export=download&id=0B4y35FiV1wh7bnc5aFZSTE9qNnM"
+#mzip2 -d mecab-ipadic-2.7.0-20070801.model.bz2
+#nkf --overwrite -Ew mecab-ipadic-2.7.0-20070801.model
+#sed -i 's/euc-jp/utf-8/' mecab-ipadic-2.7.0-20070801.model
+
+/home/asitaba/bin/mecab/libexec/mecab/mecab-dict-index -d /home/asitaba/bin/mecab/lib/mecab/dic/ipadic/ -u user.dic -f utf-8 -t utf-8 cost.csv
+
+#cp /home/asitaba/bin/mecab/lib/mecab/dic/ipadic/dicrc /home/asitaba/bin/mecab/lib/mecab/dic/mydic/
+#sed -i 's/EUC-JP/UTF-8/' dicrc
+
+#/home/asitaba/bin/mecab/libexec/mecab/mecab-dict-index \
+#	-m dicrc -d /home/asitaba/bin/mecab/lib/mecab/dic/ipadic/ \
+#	-u cost.csv -f utf-8 -t utf-8 -a dicrc
+
+#echo 'userdic = /home/asitaba/bin/mecab/lib/mecab/dic/mydic/user.dic' >> /home/asitaba/bin/mecab/lib/mecab/dic/ipadic-neorogd/dicrc
+
+mecab -d /home/asitaba/bin/mecab/lib/mecab/dic/ipadic/ -u /home/asitaba/bin/mecab/lib/mecab/dic/tmp/user.dic <<EOF
+ユーザ設定
+EOF
+ユーザ設定      名詞,一般,*,*,*,*,ユーザ設定,ユーザセッテイ,ユーザセッテイ,追加エントリ
+EOS
+
+
+mecab -d /home/asitaba/bin/mecab/lib/mecab/dic/ipadic-neorogd/ -u /home/asitaba/bin/mecab/lib/mecab/dic/tmp/user.dic <<EOF
+ユーザ設定
+EOF
+ユーザ設定      名詞,一般,*,*,*,*,ユーザ設定,ユーザセッテイ,ユーザセッテイ,追加エントリ
+EOS
+
+$ mecab -d /home/asitaba/bin/mecab/lib/mecab/dic/ipadic-neorogd/ -u /home/asitaba/bin/mecab/lib/mecab/dic/tmp/user.dic -O wakati <<EOF
+ユーザ設定とその他の項目（ユーザ）
+EOF
+ユーザ設定 と その他 の 項目 （ ユーザ ）
+$ mecab -d /home/asitaba/bin/mecab/lib/mecab/dic/ipadic-neorogd/ -u /home/asitaba/bin/mecab/lib/mecab/dic/tmp/user.dic <<EOF
+ユーザ設定とその他の項目（ユーザ）
+EOF
+ユーザ設定      名詞,一般,*,*,*,*,ユーザ設定,ユーザセッテイ,ユーザセッテイ,追加エントリ
+と      フィラー,*,*,*,*,*,と,ト,ト
+その他  名詞,代名詞,一般,*,*,*,その他,ソノタ,ソノタ
+の      助詞,連体化,*,*,*,*,の,ノ,ノ
+項目    名詞,一般,*,*,*,*,項目,コウモク,コーモク
+（      記号,括弧開,*,*,*,*,（,（,（
+ユーザ  名詞,一般,*,*,*,*,ユーザ,ユーザ,ユーザ
+）      記号,括弧閉,*,*,*,*,）,）,）
+EOS
+
+
+
+
+
+
+
+
